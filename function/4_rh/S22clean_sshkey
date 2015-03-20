@@ -1,0 +1,26 @@
+#!/bin/sh
+
+####################################################
+# Tux2live Project
+#
+# Name: 
+#
+# Description:
+#
+# Author: Ceasar Sun <ceasar_at_nchc_org_tw>
+####################################################
+[ -f "/etc/tux2live.conf" ] && . /etc/tux2live.conf
+
+_description="Clean up ssh key ..."
+
+# Main
+if [ ! -e /etc/debian_version -a ! -e /etc/SuSE-release ]; then
+	echo -n "$_description"
+
+	key_file="ssh_host_dsa_key ssh_host_dsa_key.pub ssh_host_key ssh_host_key.pub ssh_host_rsa_key ssh_host_rsa_key.pub"
+	for ik in $key_file; do
+		[ -f "/etc/ssh/$ik" ] && rm -rf /etc/ssh/$ik && echo -n " -$ik"
+	done
+
+	echo " ...done"
+fi

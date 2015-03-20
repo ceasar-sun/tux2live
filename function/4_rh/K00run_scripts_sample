@@ -1,0 +1,23 @@
+#!/bin/sh
+
+####################################################
+# Tux2live Project
+#
+# Name: 
+#
+# Description:
+#
+# Author: Ceasar Sun <ceasar_at_nchc_org_tw>
+####################################################
+[ -f "/etc/tux2live.conf" ] && . /etc/tux2live.conf
+
+_description="The aim of this script is ..."
+
+# Main
+if [ ! -e /etc/debian_version -a ! -e /etc/SuSE-release ]; then
+# scripts run in rh-like distro
+	echo "$_description"
+
+	# Write your shell script codes here 
+
+fi

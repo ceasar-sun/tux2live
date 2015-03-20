@@ -1,0 +1,27 @@
+#!/bin/sh
+
+####################################################
+# Tux2live Project
+#
+# Name: 
+#
+# Description:
+#
+# Author: Ceasar Sun <ceasar_at_nchc_org_tw>
+####################################################
+[ -f "/etc/tux2live.conf" ] && . /etc/tux2live.conf
+
+_description="Clean up pppoe configuration ..."
+
+# Main
+if [ ! -e /etc/debian_version -a ! -e /etc/SuSE-release ]; then
+	echo -n "$_description"
+
+
+	key_file="/etc/ppp/chap-secrets /etc/ppp/pap-secrets /etc/ppp/peers/dsl-provider"
+	for pppconf in $key_file; do
+		[ -f "$pppconf" ] && rm -rf $pppconf && echo -n " -$pppconf"
+	done
+
+	echo " ...done"
+fi

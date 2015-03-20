@@ -1,0 +1,105 @@
+#!/bin/sh
+
+####################################################
+# Tux2live Project
+#
+# Name: 
+#
+# Description:
+#
+# Author: Ceasar Sun <ceasar_at_nchc_org_tw>
+####################################################
+[ -f "/etc/tux2live.conf" ] && . /etc/tux2live.conf
+
+_description="Setting up automatic login and screensaver..."
+
+# Main
+if [ -e /etc/debian_version ]; then
+# Scrips run in debian-base distro
+	echo "$_description"
+
+	if [ -f /etc/gdm/gdm-cdd.conf ]; then
+		GDMCONF=/etc/gdm/gdm-cdd.conf
+	else
+		GDMCONF=/etc/gdm/gdm.conf
+	fi
+
+	if [ -f ${GDMCONF} ]; then
+		# Configure GDM autologin
+		sed -i \
+        -e "s/^AutomaticLoginEnable=.*\$/AutomaticLoginEnable=true/" \
+        -e "s/^AutomaticLogin=.*\$/AutomaticLogin=$_LIVECD_USERNAME/" \
+        -e "s/^TimedLoginEnable=.*\$/TimedLoginEnable=true/" \
+        -e "s/^TimedLogin=.*\$/TimedLogin=$_LIVECD_USERNAME/" \
+        -e "s/^TimedLoginDelay=.*\$/TimedLoginDelay=10/" \
+        ${GDMCONF}
+	elif [ -f /etc/gdm3/daemon.conf ]; then
+		GDMCONF=/etc/gdm3/daemon.conf
+	    AutologinParameters="AutomaticLoginEnable=true\n\
+AutomaticLogin=$_LIVECD_USERNAME\n\
+TimedLoginEnable=true\n\
+TimedLogin=$_LIVECD_USERNAME\n\
+TimedLoginDelay=10"
+
+		if ! `grep -qs '\[daemon\]' $GDMCONF` ; then
+            echo '[daemon]' >> $GDMCONF
+        fi
+        sed -i "s/\[daemon\]/\[daemon\]\n$AutologinParameters/" $GDMCONF
+		sudo -u "$USERNAME" gconftool-2 -s -t bool \
+            /apps/indicator-session/suppress_logout_menuitem true
+
+	else
+		cat > /etc/gdm/custom.conf <<EOF
+[daemon]
+TimedLoginEnable=false
+AutomaticLoginEnable=true
+TimedLogin=$_LIVECD_USERNAME
+AutomaticLogin=$_LIVECD_USERNAME
+TimedLoginDelay=30
+DefaultSession=gnome
+EOF
+	
+	fi
+
+	cat <<EOF > /etc/sudoers.d/a11y-sudo
+# TO allow accessibility in GTK to work with sudo.
+Defaults        env_keep = "ORBIT_SOCKETDIR XDG_SESSION_COOKIE GTK_MODULES"
+EOF
+	chmod 0440 /etc/sudoers.d/a11y-sudo
+
+
+	if [ -f /etc/kde3/kdm/kdmrc ]; then
+	# Configure KDM autologin
+		sed -i -r \
+        -e "s/^#?AutoLoginEnable=.*\$/AutoLoginEnable=true/" \
+        -e "s/^#?AutoLoginUser=.*\$/AutoLoginUser=$_LIVECD_USERNAME/" \
+        -e "s/^#?AutoReLogin=.*\$/AutoReLogin=true/" \
+        /etc/kde3/kdm/kdmrc
+	fi
+
+	if /usr/bin/which kpersonalizer >/dev/null; then
+	# Disable first-login wizard for KDE
+		if [ ! -f /etc/kde3/kpersonalizerrc ]; then
+			cat > /etc/kde3/kpersonalizerrc <<EOF
+[General]
+FirstLogin=false
+EOF
+		else
+			echo "I'm not smart enough to disable kpersonalizer startup" >&2
+			echo "Because kpersonalizerrc already exists" >&2
+		fi
+	fi
+
+	# Disable screensaver locck
+	gnome_screensaver_key="/apps/gnome-screensaver/lock /apps/gnome-screensaver/lock_enabled /apps/gnome-screensaver/idle_activation_enabled"
+	gnome_screensaver_version=$(dpkg-query -W --showformat='${Version}' gnome-screensaver 2>/dev/null) || gnome_screensaver_version=""
+	if [ -n "$gnome_screensaver_version" ]; then
+		for scrkey in $gnome_screensaver_key; do
+			# check related parameters of screensaver lock, set the key as 'false' if it exist
+			[ "$(sudo -u $_LIVECD_USERNAME gconftool-2 -g $scrkey 2>/dev/null)" = "true" -o "$(sudo -u $_LIVECD_USERNAME gconftool-2 -g $scrkey 2>/dev/null)" = "false" ] && sudo -u $_LIVECD_USERNAME gconftool-2 -t bool -s $scrkey false;
+		done
+	fi
+fi
+
+return;
+

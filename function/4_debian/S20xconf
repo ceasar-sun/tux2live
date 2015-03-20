@@ -1,0 +1,39 @@
+#!/bin/sh
+
+####################################################
+# Name: S20xconf
+#
+# Description:
+#	Clean up X11 xconf, to make sure it would be reconfigure in boot time 
+#
+####################################################
+[ -f "/etc/tux2live.conf" ] && . /etc/tux2live.conf
+
+_description="Clean up X11 xconf ..."
+
+# Main
+if [ -e /etc/debian_version ]; then
+# Scrips run in debian-base distro
+	echo "$_description"
+
+	for ix in XF86Config-4 xorg.conf; do
+		[ -e "/etc/X11/$ix" ] && mv -f /etc/X11/${ix} /etc/X11/${ix}.tux2live.save
+	done
+	# Debian Sarge does not sync the locale setting of gdm with system. do it 
+	if [ -f /etc/default/gdm ]; then
+	# use subshell to avoid the running shell
+		(
+		# For B2D, it uses /etc/sysconfig/i18n...
+		[ -e /etc/sysconfig/i18n ] && . /etc/sysconfig/i18n
+		# the environment priority is higher then /etc/sysconfig/i18n
+		[ -e /etc/environment ] && . /etc/environment
+			if [ -n "$LANG" ]; then
+				if grep -q "^[[:space:]]*#*[[:space:]]*LANG=.*" /etc/default/gdm 2>/dev/null; then
+					perl -pi -e "s/^[[:space:]]*#*[[:space:]]*LANG=.*/LANG=$LANG/g" /etc/default/gdm
+				else
+					echo "LANG=$LANG" >> /etc/default/gdm
+				fi
+			fi
+		)
+	fi
+fi

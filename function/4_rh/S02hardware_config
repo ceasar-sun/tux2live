@@ -1,0 +1,29 @@
+#!/bin/sh
+
+####################################################
+# Tux2live Project
+#
+# Name: 
+#
+# Description: Take care the hardware config files, clean old, make them be detected at boot
+#
+# Author: Ceasar Sun <ceasar_at_nchc_org_tw>
+####################################################
+[ -f "/etc/tux2live.conf" ] && . /etc/tux2live.conf
+
+_description="Clean up hardware config files, kudzu logs ..."
+
+# Main
+if [ ! -e /etc/debian_version -a ! -e /etc/SuSE-release ]; then
+# scripts run in rh-like distro
+	echo "$_description"
+
+	[ -f /etc/sysconfig/hwconf ] && rm -f /etc/sysconfig/hwconf
+
+	# Clean up net card recorder
+	[ -f /etc/iftab ] && rm -rf /etc/iftab
+	find /etc/udev -name *-persistent-net.rules -exec rm -rf {} \;
+	find /etc/udev -name *-net_config.rules -exec rm -rf {} \;
+
+	find /etc/ -name "modules.conf*" -exec rm -f {} \;
+fi

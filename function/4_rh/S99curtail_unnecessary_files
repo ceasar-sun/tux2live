@@ -1,0 +1,30 @@
+#!/bin/sh
+
+####################################################
+# Tux2live Project
+#
+# Name: 
+#
+# Description:
+#
+# Author: Ceasar Sun <ceasar_at_nchc_org_tw>
+####################################################
+[ -f "/etc/tux2live.conf" ] && . /etc/tux2live.conf
+
+_description="Curtail unnecessary files, folders ..."
+
+# Main
+if [ ! -e /etc/debian_version -a ! -e /etc/SuSE-release ]; then
+# scripts run in rh-like distro
+	echo "$_description"
+
+	# Write your shell script codes here 
+	find /var/log -type f -exec rm -rf {} \;
+	# touch some necessary files 
+	touch /var/log/messages /var/log/wtmp /var/log/secure 
+
+	find /var/spool -type f -exec rm -rf {} \;
+	#rm -rf $_LIVE_ROOT_PATH/var/tmp/*
+
+	find /var/run -type f -exec rm -rf {} \;
+fi

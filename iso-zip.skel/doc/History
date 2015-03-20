@@ -1,0 +1,144 @@
+ChangeLog:
+
+Please view https://tux.nchc.org.tw/trac/tux2live/browser/trunk/doc/History for detail.
+
+1.0.2
+* Fix : 
+  * ~tux2live/tux2live-mkrootfs
+    * Make a symbolic link to match imported user home
+  * ~tux2live/tux2live
+    * Show warning message for importing user data
+
+1.0.1
+* Fix : 
+  * ~tux2live/tux2live-function
+    * Enhance kernel module detection method 
+	* Use -P parameter of "df" command to check free disk space
+	* Add "aufs" options for future work
+
+1.0.0-rc10
+* Fix : 
+  * ~tux2live/tux2live-mkrootfs
+    * Fix user data import issue
+
+1.0.0-rc9-090113
+* Fix : 
+  * ~tux2live/conf/tux2live.conf
+    * Add groups list parameter for import : _MKROOTFS_IMPORT_USER_GROUPS
+  * ~tux2live/conf/tux2live-custom.conf
+    *  Add extra groups list that user expected : _MKROOTFS_IMPORT_USER_GROUPS_EXT
+  * ~tux2live/tux2live-mkrootfs
+    * get the import user's group to tux2live.conf in rootfs
+  * ~tux2live/function/4debian/S10system_users
+  * ~tux2live/function/4rh/S10system_users
+  
+1.0.0-rc9-090109
+* Fix : 
+  * ~tux2live/function/4_debian/S23networking
+    -> Markup eth?, wlan? auth? in configuration file (it should be done at initrd stage)
+  * ~tux2live/conf/tux2live.conf
+    -> add related net device module list into configuration parameter : _MKINITRD_INITRD_INSMOD 
+
+* Add :
+  * ~tux2live/initrd-live.skel/scripts/casper-bottom/42disable_apparmor (from Ubuntu live CD)
+  * ~tux2live/cdimage.skel/syslinux : usage for to install it into USB or Harddisk
+  * ~tux2live/initrd-live.skel/scripts/tux-patch/99fix_dbus_4nm_applet
+  	-> prepare for some special situation (ex: in 1.0.0-rc9, net device module don't include at initrd stage )
+
+1.0.0-rc9
+* Remove flpoppy module loading while initrd stage
+	* Check ~tux2live/initrd-live.skel/etc/modprobe.d/isapnp and ~tux2live/initrd-live.skel/etc/modprobe.d/blacklist
+* Fix Debian/Ubuntu reboot, shutdown issue
+	* Use Debin live CD's casper script, check ~tux2live/function/4_debian/_scripts/casper-shutdown
+* Remove net card device recorder
+	* /etc/iftab ,/etc/udev/rules.d/xx-persistent-net.rules, /etc/udev/rules.d/xx-net_config.rules (Mandriva 2008)
+* Add /dev/pts , /dev/shm in initrd script, check ~tux2live/initrd-live.skel/linuxrc-or-init line 28,29
+* Some bugs fix
+	* casper script name that be copied into root fs
+
+1.0.0-rc8
+* Add " ubuntu" in tux2live in case of different module path on Ubuntu 7.10 
+* Remove floppy detect in initrd run time
+* Add pppoe cleaner post-procedure
+* Some bugs fix
+
+1.0.0-rc6
+* Use Ubuntu Feisty initrd as template 
+* Add ~/tool/tux2live-usplash-builder.tar.gz
+* Add usplash* files into initrdfs, make it work
+* Run time to copy\generate files into live CD skeleton during "--mkiso" process
+* Add kernel/drivers/message into initrd
+* Use absolute path for kernel and initrd in isolinux.cfg 
+
+1.0.0-rc5
+* Add "kernel/drivers/ata" modules in initrd for FC7 to auto-detect cdrom 
+* Add "kernel/drivers/video" modules in initrd for usplash
+* Add "S22clean_sshkey" scripts at each post-run scripts poll
+
+1.0.0-rc4
+* Add ~/initrd-live.skel/sbin/udevplug
+* Use new busybox (compiled as static) to replace lots of executable files in initrdfs
+* Bug fix: isolinux.cfg. Add "Debug mode" in isolinux.cfg
+* Add usplash* files into initrdfs, make it work
+
+1.0.0-rc3
+* Add --drbl-mode 
+* Bug fix: rsync --exclude options to avoid copying tux2live related data (tmp, output directory)
+
+1.0.0-rc2
+* Add _TUX2LIVE_ROOTFS_METHOD [--rootfs_method [unionfs|dm_snapshot]] to let user to assign which method to make root filesystem
+* Smart way to determine which method to build root filesystem : for support more different distributions
+* Add check_system_env function to support more information about necessary packages or modules
+
+20070529.4
+* Bug fix: check rules for $_TUX2LIVE_ENV_CHECK_STACKS
+* Add DEBUG_MESSAGE function : Usage : DEBUG_MESSAGE $show_message
+* Add WAIT_UNTIL_COMM function : Usage : DEBUG_MESSAGE $comm_lne
+* Use terminal highlight color 
+* Change rules to use dm_snapshot method ,to make it works at distros what don't support unionfs but dm_snapshot
+* Add [-p| --purge] parameter to clean up tmp/input files
+* _MKROOTFS_ROOT_PATH use list by list , enhance to combind with tux2live-custom.conf or suit for other requirement , ex: drbl
+* Add lots of 'how to' in tux2live-custom.conf
+
+20070524.1
+* Add system environment check mode
+* Add $_TUX2LIVE_VERSION info into /etc/tux2live in live CD
+* doc/README, history
+
+20070524.0
+* Clean /etc/rc.local in live CD mode
+
+20070523.4
+* verbose mode
+* stop service method in rh-like distro
+
+20070523.2
+* Add env_check function to check commands, modules, free spaces
+
+20070523.1
+* Add squashfs,unionfs module into initrd
+* Add a speared line at CD boot menu
+
+20070522.5
+* Fix screensaver lock issue
+
+20070522.2
+* Add commands_check before to run any parts of tux2live function
+
+20070521.5
+* Add disable xscreensaber in ~funtions/4_rh
+* sudo check
+
+20070521.4
+* Add check if program do user data import
+
+20070521.3
+* fix xserver autologin in ~/function/xserver autologin
+
+20070521.2
+* add --exclude when import user data
+* fix ~/tux2live-mkiso bug
+
+20070521.1
+* xserver autologin
+* 匯入指定user 設定： rsync -a /home/xxx /home/livecd

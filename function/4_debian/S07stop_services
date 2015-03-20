@@ -1,0 +1,38 @@
+#!/bin/sh
+
+####################################################
+# Tux2live Project
+#
+# Name: 
+#
+# Description:
+#
+# Author: Ceasar Sun <ceasar_at_nchc_org_tw>
+####################################################
+[ -f "/etc/tux2live.conf" ] && . /etc/tux2live.conf
+
+_description="Stop services and clena /etc/rc.local at live CD mode ..."
+
+# Main
+if [ -e /etc/debian_version ]; then
+# Scrips run in debian-base distro
+	echo "$_description"
+
+	for si in $_SERVICES_TO_STOP; do
+		echo "Stop $si service ..."
+		rm -f /etc/init.d/rc[123456].d/K[0-9][0-9]$si
+	done
+fi
+
+# Clean up /etc/lrc.local
+cat > /etc/rc.local <<EOF
+#!/bin/sh -e
+#
+# rc.local
+#
+# This script is generated in tux2live-mkrootfs
+
+exit 0
+
+EOF
+

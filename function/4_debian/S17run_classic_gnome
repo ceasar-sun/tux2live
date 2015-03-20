@@ -1,0 +1,27 @@
+#!/bin/sh
+
+####################################################
+# Tux2live Project
+#
+# Name: 
+#
+# Description: Set gnome-2d as default gnome session for special distr
+#				This script must be run after S15autologin_screensaver
+# Author: Ceasar Sun <ceasar_at_nchc_org_tw>
+####################################################
+[ -f "/etc/tux2live.conf" ] && . /etc/tux2live.conf
+
+_description="Set gnome-2d as default gnome session for special distro ..."
+
+# Main
+if [ -e /etc/debian_version ]; then
+# Scrips run in debian-base distro
+
+	[ -f /etc/lsb-release ] && . /etc/lsb-release
+	# switch gnome-2d as default 
+	if [ "$DISTRIB_ID" = "Ubuntu" -a "$(echo $DISTRIB_RELEASE | awk -F '.' '{print $1}')" -ge 11 -a  -x /usr/lib/gdm/gdm-set-default-session ] ; then
+		echo "$_description"		
+		/usr/lib/gdm/gdm-set-default-session gnome-2d || true
+	fi
+	
+fi

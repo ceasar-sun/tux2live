@@ -1,0 +1,27 @@
+#!/bin/sh
+
+####################################################
+# Tux2live Project
+#
+# Name: 
+#
+# Description: To run firstboot but no reconfig, then make sure to run system-config-display for live CD mode
+#
+# 
+####################################################
+[ -f "/etc/tux2live.conf" ] && . /etc/tux2live.conf
+
+_description="Process firstboot ..."
+
+# Main
+if [ ! -e /etc/debian_version -a ! -e /etc/SuSE-release ]; then
+# scripts run in rh-like distro
+	echo "$_description"
+
+	# remove the firstboot setting to aviod it say NO
+	# remove the /etc/reconfigSys to avoid firstboot run reconfig
+	# Most important is to make sure to run system-config-display
+	[ -f /etc/sysconfig/firstboot ] && echo "RUN_FIRSTBOOT=NO" > /etc/sysconfig/firstboot 
+	[ -f /etc/reconfigSys ] && rm -f /etc/reconfigSys
+	[ -f "/etc/init.d/firstboot" ] && sed -i -e "s|^\(\s*\)\(/usr/sbin/firstboot\)$|\1# \2 # comment by tux2live mkrootfs|" /etc/init.d/firstboot
+fi

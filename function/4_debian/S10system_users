@@ -1,0 +1,45 @@
+#!/bin/sh
+
+####################################################
+# Tux2live Project
+#
+# Name: 
+#
+# Description:
+#
+# Author: Ceasar Sun <ceasar_at_nchc_org_tw>
+####################################################
+[ -f "/etc/tux2live.conf" ] && . /etc/tux2live.conf
+
+_description="Clean up old account and records in sudo file ,then creat new user for live CD ..."
+
+# Main
+if [ -e /etc/debian_version ]; then
+# Scrips run in debian-base distro
+	echo "$_description"
+
+	# del ols users form passwd, group and sudoer files
+	MINUID="1000"
+	to_del_users="$(awk -F":" "\$3 >= $MINUID && \$1 != \"nobody\" {print \$1}" /etc/passwd)"
+	for un in $to_del_users; do
+		echo -n "-user: $un ..."
+		/usr/sbin/userdel -f -r $un 2>/dev/null
+		perl -pi -e "s/^\s*$un\s+.+$//g" /etc/sudoers
+		sed -i -e "s/$un\,*//g" /etc/group -e "s/\,$//g" /etc/group
+	done
+
+	# add new account '$_TUX2LIVE_LIVECD_USERNAME:$_TUX2LIVE_LIVECD_PASSWD' (defined in tux2live.conf)
+	#  and add it into groups and sudoer files
+	/usr/sbin/useradd -m -s "/bin/bash" -d /home/$_LIVECD_USERNAME -u $_LIVECD_USERUID $_LIVECD_USERNAME 2> /dev/null
+	echo "$_LIVECD_USERNAME:$_LIVECD_PASSWD"| /usr/sbin/chpasswd
+	# set root passwd be 'livecd', 
+	echo "root:$_LIVECD_PASSWD"| /usr/sbin/chpasswd
+	echo "$_LIVECD_USERNAME	ALL=(ALL)	NOPASSWD: ALL" >> /etc/sudoers
+
+	# add "livecd" user into necessary groups
+	_distro_extra_groups="audio floppy video scanner netdev"
+	_import_groups="$_LIVECD_GROUPS $_distro_extra_groups"
+	for gn in $_import_groups; do
+		/usr/sbin/usermod -a -G $gn $_LIVECD_USERNAME
+	done
+fi

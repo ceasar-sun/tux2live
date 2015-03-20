@@ -1,0 +1,64 @@
+#!/bin/sh
+
+####################################################
+# Tux2live Project
+#
+# Name: 
+#
+# Description:
+#
+# Author: Ceasar Sun <ceasar_at_nchc_org_tw>
+####################################################
+[ -f "/etc/tux2live.conf" ] && . /etc/tux2live.conf
+
+_description="Clean up /etc/mtab, build new /tc/fstab for live CD model"
+
+# Main
+if [ ! -e /etc/debian_version -a ! -e /etc/SuSE-release ]; then
+# scripts run in rh-like distro
+	echo "$_description"
+
+	# Clean up /etc/mtab
+	[ -f /etc/mtab ] && rm -rf /etc/mtab && touch /etc/mtab
+
+	if [ "$_LIVECD_ROOTFS_METHOD" = "dm_snapshot" ] ; then
+		# wite a new fstab for Fedora, Centos, RHEL, Scientific
+		# Don't modify the first line : /dev/mapper/livecd-rw   /   ext3 0 0
+		# It would refer to initrd run time 
+		cat > /etc/fstab <<EOF
+# Create by tux2live-mkrootfs ,portrun : S05fstab , dm_snapshot
+
+/dev/mapper/livecd-rw   /                       ext3    defaults,noatime 0 0
+devpts                  /dev/pts                devpts  gid=5,mode=620  0 0
+tmpfs                   /dev/shm                tmpfs   defaults        0 0
+proc                    /proc                   proc    defaults        0 0
+sysfs                   /sys                    sysfs   defaults        0 0
+
+EOF
+	elif [ "$_LIVECD_ROOTFS_METHOD" = "unionfs"  ] ; then
+		# wite a new fstab
+		cat > /etc/fstab <<EOF
+# Create by tux2live-mkrootfs ,portrun : S05fstab , unionfs
+
+none / $_LIVECD_ROOTFS_METHOD rw 0 0
+tmpfs /tmp tmpfs nosuid,nodev 0 0
+
+EOF
+	elif [ "$_LIVECD_ROOTFS_METHOD" = "aufs"  ] ; then
+		# wite a new fstab
+		cat > /etc/fstab <<EOF
+# Create by tux2live-mkrootfs , portrun : S05fstab, aufs
+
+$_LIVECD_ROOTFS_METHOD / $_LIVECD_ROOTFS_METHOD rw 0 0
+tmpfs /tmp tmpfs nosuid,nodev 0 0
+
+EOF
+	else	
+		cat > /etc/fstab <<EOF
+# Create by tux2live-mkrootfs , portrun : S05fstab, unknow _LIVECD_ROOTFS_METHOD
+
+EOF
+
+	fi
+
+fi

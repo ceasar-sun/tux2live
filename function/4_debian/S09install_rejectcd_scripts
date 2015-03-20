@@ -1,0 +1,39 @@
+#!/bin/sh
+
+####################################################
+# Tux2live Project
+#
+# Name: 
+#
+# Description:
+#
+# Author: Ceasar Sun <ceasar_at_nchc_org_tw>
+####################################################
+[ -f "/etc/tux2live.conf" ] && . /etc/tux2live.conf
+
+declare _reject_script
+
+_description="Install live media reject script  ..."
+[ "$_LIVECD_ROOTFS_METHOD" = "aufs" ] && _reject_script=live-initramfs || _reject_script=casper
+
+# Main
+if [ -e /etc/debian_version ]; then
+# Scrips run in debian-base distro
+	echo "$_description"
+	
+	[ -e "/etc/init.d/${_reject_script}" ] || cp -f /tmp/_scripts/${_reject_script} /etc/init.d/${_reject_script}
+	chmod +x /etc/init.d/${_reject_script}
+	if [ -f /etc/rc0.d/S??halt -a ! -e /etc/rc0.d/S??${_reject_script} ]; then
+		RUNID=$(basename /etc/rc0.d/S??halt | sed -s -e "s/^S//g" -e "s/halt$//g" )
+		RUNID=$(expr ${RUNID} - 1 )
+		[ "$RUNID" = "0" ] && RUNID=01
+		ln -s ../init.d/${_reject_script} /etc/rc0.d/S${RUNID}${_reject_script}
+	fi
+
+	if [ -f /etc/rc6.d/S??reboot -a ! -e /etc/rc6.d/S??${_reject_script} ]; then
+		RUNID=$(basename /etc/rc6.d/S??reboot | sed -s -e "s/^S//g" -e "s/reboot$//g" )
+		RUNID=$(expr ${RUNID} - 1 )
+		[ "$RUNID" = "0" ] && RUNID=01
+		ln -s ../init.d/${_reject_script} /etc/rc6.d/S${RUNID}${_reject_script}
+	fi
+fi

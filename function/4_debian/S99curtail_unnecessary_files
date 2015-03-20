@@ -1,0 +1,36 @@
+#!/bin/sh
+
+####################################################
+# Tux2live Project
+#
+# Name: 
+#
+# Description:
+#
+# Author: Ceasar Sun <ceasar_at_nchc_org_tw>
+####################################################
+[ -f "/etc/tux2live.conf" ] && . /etc/tux2live.conf
+
+_description="The aim of this script is ..."
+
+# Main
+if [ -e /etc/debian_version ]; then
+# scripts run in rh-like distro
+	echo "$_description"
+
+	# Write your shell script codes here 
+	find /var/log -type f -exec rm -rf {} \;
+	# touch some necessary files 
+	touch /var/log/messages /var/log/wtmp /var/log/secure 
+
+	find /var/spool -type f -exec rm -rf {} \;
+	#rm -rf $_LIVE_ROOT_PATH/var/tmp/*
+
+	find /var/run -type f -exec rm -rf {} \;
+
+	# clean apt relative : /var/cache/apt
+	apt-get -y autoremove 2>/dev/null;
+	apt-get -y autoclean 2>/dev/null;
+	apt-get -y clean all 2>/dev/null;
+
+fi

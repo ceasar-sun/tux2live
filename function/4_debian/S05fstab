@@ -1,0 +1,31 @@
+#!/bin/sh
+
+####################################################
+# Tux2live Project
+#
+# Name: 
+#
+# Description:
+#
+# Author: Ceasar Sun <ceasar_at_nchc_org_tw>
+####################################################
+[ -f "/etc/tux2live.conf" ] && . /etc/tux2live.conf
+
+_description="Clean up /etc/mtab, build new /tc/fstab for live CD model"
+
+# Main
+if [ -e /etc/debian_version ]; then
+# Scrips run in debian-base distro
+	echo "$_description"
+
+	# Clean up /etc/mtab
+	[ -f /etc/mtab ] && rm -rf /etc/mtab && touch /etc/mtab
+
+	# wite a new fstab
+	cat > /etc/fstab <<EOF
+# Create by tux2live-mkrootfs , portrun : S05fstab, aufs
+
+$_LIVECD_ROOTFS_METHOD / $_LIVECD_ROOTFS_METHOD rw 0 0
+tmpfs /tmp tmpfs nosuid,nodev 0 0
+EOF
+fi

@@ -1,0 +1,24 @@
+#!/bin/sh
+
+####################################################
+# Tux2live Project
+#
+# Name: 
+#
+# Description:
+#
+# Author: Ceasar Sun <ceasar_at_nchc_org_tw>
+####################################################
+[ -f "/etc/tux2live.conf" ] && . /etc/tux2live.conf
+
+_description="Remove some packages: $_PACKAGE_TO_POSTREMOVE ..."
+
+# Main
+if [ -e /etc/debian_version ]; then
+	echo -n "$_description"
+
+	for pk in $_PACKAGE_TO_POSTREMOVE; do
+		apt-get -y -qq purge $pk
+	done
+	echo " ...done"
+fi

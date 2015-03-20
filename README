@@ -1,0 +1,28 @@
+####################################################
+# tux2live : Your linux live CD builder
+#
+# Description: To build a live CD for your Linux distribution from hard disk environment
+# Last update :
+# Author:
+#	Ceasar Sun <ceasar_at_nchc_org_tw>
+#	Steven Shiau <steven_at_nchc_org_tw>
+#
+#	Free Software Lab, NCHC, Taiwan
+# License: GPL
+####################################################
+
+Tux2live:
+	A toolkit to build your linux environment from hard disk into live CD.
+
+Please read ~/doc/README.*.txt for more detail.
+
+Contact:
+	Ceasar Sun <ceasar at nchc org tw>
+	Steven Shiau <steven at nchc org tw>
+
+####################################################
+#
+#	Free Software Lab, NCHC, Taiwan
+# 
+####################################################
+

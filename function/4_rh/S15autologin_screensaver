@@ -1,0 +1,140 @@
+#!/bin/sh
+
+####################################################
+# Tux2live Project
+#
+# Name: 
+#
+# Description:
+#
+# Author: Ceasar Sun <ceasar_at_nchc_org_tw>
+####################################################
+[ -f "/etc/tux2live.conf" ] && . /etc/tux2live.conf
+
+_description="Setting up autologin and screensaver for X ..."
+
+# copy from drbl project ,from file: ~drbl/sbin/drbl-functions
+get_gdm_kdm_conf_filename() {
+
+	GDM_CFG=""
+	for ig in gdm.conf-custom custom.conf gdm.conf; do
+		GDM_CFG="$($query_pkglist_cmd gdm 2>/dev/null | grep -E "\/$ig$")"
+		[ -n "$GDM_CFG" ] && break
+	done
+	FAC_GDM_CFG="$($query_pkglist_cmd gdm 2>/dev/null | grep -E "\/factory-gdm.conf$")"
+
+	for ipkg in kdm kdebase kdebase-kdm-config-file kdebase3-kdm mandriva-kdm-config; do
+		KDM_CFG="$($query_pkglist_cmd $ipkg 2>/dev/null | grep -E "(\/kdmrc$)" | head -n 1)"
+		if [ -n "$(echo $KDM_CFG | grep -E "^\/opt\/kde")" ]; then
+			[ -e "/etc/$KDM_CFG" ] && KDM_CFG=/etc/$KDM_CFG
+		fi
+		[ -n "$KDM_CFG" ] && break
+	done
+} # end of get_gdm_kdm_conf_filename
+
+get_block_line_in_gdm_kdm() {
+  local session="$1"
+  local CFG_FILE="$2"
+  [ -f "$CFG_FILE" ] || exit 1
+
+  between_lines=$(grep -n "^\[.*\]" $CFG_FILE |grep -i -A1 "\[$session\]" | cut -d":" -f1)
+  begin_line=$(echo $between_lines | awk -F" " '{print $1}')
+  end_line=$(echo $between_lines | awk -F" " '{print $2}')
+  # if end_line is nothing, it must be the last block, i.e. we can not find the next [.*]
+  if [ -z "$end_line" ]; then
+    end_line=$(wc -l $CFG_FILE | awk -F" " '{print $1}')
+  else
+    # if not nothing, backword one line
+    end_line=$(($end_line - 1))
+  fi
+  echo "$begin_line $end_line"
+} # end of get_block_line_in_gdm_kdm
+
+set_gdm_auto_login() {
+
+	local auto_login_id="$1"
+
+	# disable other types login (timed login) if exists
+	sed -i -e "s|^[[:space:]]*#*[[:space:]]*TimedLoginEnable=.*|TimedLoginEnable=false|" $GDM_CFG
+	sed -i -e  "s|/^[[:space:]]*#*[[:space:]]*TimedLogin=.*|TimedLogin=|" $GDM_CFG
+	sed -i -e "s|^[[:space:]]*#*[[:space:]]*TimedLoginDelay=.*|TimedLoginDelay=|" $GDM_CFG
+
+  # enable autologin
+  lines="$(get_block_line_in_gdm_kdm daemon $GDM_CFG)"
+  begin_line=$(echo $lines | awk -F" " '{print $1}')
+  end_line=$(echo $lines | awk -F" " '{print $2}')
+  chk_cmd="if ($begin_line..$end_line) {print}"
+  if [ -n "$(perl -n -e "$chk_cmd" $GDM_CFG | grep -i "^AutomaticLoginEnable=")" ]; then
+    sub_cmd="if ($begin_line..$end_line) {s/^AutomaticLoginEnable=.*/AutomaticLoginEnable=true/}"
+    perl -pi -e "$sub_cmd" $GDM_CFG
+  else
+    # insert 1 blank line
+    sub_cmd="if ($((end_line))..$((end_line))) {s/^(.*)$/\$1\n/gi}"
+    perl -pi -e "$sub_cmd" $GDM_CFG
+    # replace the one we want in the added blank line
+    sub_cmd="if ($((end_line+1))..$((end_line+1))) {s/^$/AutomaticLoginEnable=true/gi}"
+    perl -pi -e "$sub_cmd" $GDM_CFG
+  fi
+  # put the autologin id
+  lines="$(get_block_line_in_gdm_kdm daemon $GDM_CFG)"
+  begin_line=$(echo $lines | awk -F" " '{print $1}')
+  end_line=$(echo $lines | awk -F" " '{print $2}')
+  chk_cmd="if ($begin_line..$end_line) {print}"
+  if [ -n "$(perl -n -e "$chk_cmd" $GDM_CFG | grep -i "^AutomaticLogin=")" ]; then
+    sub_cmd="if ($begin_line..$end_line) {s/^AutomaticLogin=.*/AutomaticLogin=$auto_login_id/}"
+    perl -pi -e "$sub_cmd" $GDM_CFG
+  else
+    # insert 1 blank line
+    sub_cmd="if ($((end_line))..$((end_line))) {s/^(.*)$/\$1\n/gi}"
+    perl -pi -e "$sub_cmd" $GDM_CFG
+    # replace the one we want in the added blank line
+    sub_cmd="if ($((end_line+1))..$((end_line+1))) {s/^$/AutomaticLogin=$auto_login_id/gi}"
+    perl -pi -e "$sub_cmd" $GDM_CFG
+  fi
+}
+
+set_kdm_auto_login() {
+
+	local auto_login_id="$1"
+
+	if [ ! -f $KDM_CFG ]; then
+		[ "$BOOTUP" = "color" ] && $SETCOLOR_WARNING
+		echo "$KDM_CFG is NOT found!!! Assume it's DRBL SSI mode!"  
+		[ "$BOOTUP" = "color" ] && $SETCOLOR_NORMAL
+		return 1
+	fi
+	perl -p -i -e "s/^[[:space:]]*#*[[:space:]]*AutoLoginEnable=.*/AutoLoginEnable=true/" $KDM_CFG
+	perl -p -i -e "s/^[[:space:]]*#*[[:space:]]*AutoLoginUser=.*/AutoLoginUser=$auto_login_id/" $KDM_CFG
+}
+
+
+# Main
+if [ ! -e /etc/debian_version -a ! -e /etc/SuSE-release ]; then
+# Scrips run in debian-base distro
+	echo "$_description"
+	
+	GDM_CFG=""
+	KDM_CFG=""
+	query_pkglist_cmd="rpm -ql"
+	set_gdmgreeter="yes"
+	
+	# Enable xserver autologin
+	get_gdm_kdm_conf_filename
+
+	[ -n "$GDM_CFG" ] && set_gdm_auto_login $_LIVECD_USERNAME
+	[ -n "$KDM_CFG" ] && set_kdm_auto_login $_LIVECD_USERNAME
+
+	# Disable screensaver locck
+	query_allpkg_cmd="rpm -qa"
+	gnome_screensaver_key="/apps/gnome-screensaver/lock /apps/gnome-screensaver/lock_enabled /apps/gnome-screensaver/idle_activation_enabled"
+	gnome_screensaver_version=$($query_allpkg_cmd | grep gnome-screensaver 2>/dev/null) || gnome_screensaver_version=""
+	if [ -n "$gnome_screensaver_version" ]; then
+		for scrkey in $gnome_screensaver_key; do
+			# check related parameters of screensaver lock, set the key as 'false' if it exist
+			[ "$(sudo -u $_LIVECD_USERNAME gconftool-2 -g $scrkey 2>/dev/null)" = "true" -o "$(sudo -u $_LIVECD_USERNAME gconftool-2 -g $scrkey 2>/dev/null)" = "false" ] && sudo -u $_LIVECD_USERNAME gconftool-2 -t bool -s $scrkey false;
+		done
+	fi
+
+fi
+
+

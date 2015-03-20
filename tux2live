@@ -1,0 +1,116 @@
+#!/bin/bash
+
+####################################################
+# tux2live : Your linux live system builder
+#
+# Description: To build a live system for your Linux distribution from hard disk environment
+# Last update :
+# Author:
+#	Ceasar Sun <ceasar_at_nchc_org_tw>
+#	Steven Shiau <steven_at_nchc_org_tw>
+#
+#	Free Software Lab, NCHC, Taiwan
+# License: GPL
+####################################################
+export PATH=$PATH:/usr/sbin:/bin:/sbin:/sbin
+
+_ACTION=
+
+# Load Tux2live setting and functions
+_TUX2LIVE_ROOT_DIR=$(cd $(dirname $0) ;pwd)
+
+[ -f "$_TUX2LIVE_ROOT_DIR/conf/tux2live.conf" ] && [ -z "$_LOAD_TUX2LIVE_CONF" ] && . $_TUX2LIVE_ROOT_DIR/conf/tux2live.conf
+	
+# Parse command-line options
+while [ $# -gt 0 ]; do
+	case "$1" in
+		--outputdir) shift; _TUX2LIVE_OUTPUT_DIR=$1; shift ;;
+		--outputdir=*) _TUX2LIVE_OUTPUT_DIR=${1#--outputdir=}; shift ;;
+
+		--tmpdir) shift; _TUX2LIVE_TMP_DIR=$1; shift ;;
+		--tmpdir=*) _TUX2LIVE_TMP_DIR=${1#--tmpdir=}; shift ;;
+
+		--rootfs_method) shift; 
+			if [ "$1" = "unionfs" -o "$1" = "dm_snapshot" ]; then 
+				_TUX2LIVE_ROOTFS_METHOD=$1 
+			else
+				DEBUG_MESSAGE "${0}: ${1}: invalid option" ; do_print_help=y
+			fi
+			shift ;;
+		--rootfs_method=*) shift;
+			if [ "$1" = "unionfs" -o "$1" = "dm_snapshot" ]; then
+				_TUX2LIVE_ROOTFS_METHOD=${1#--rootfs_method=}
+			else
+				DEBUG_MESSAGE "${0}: ${1}: invalid option" ; do_print_help=y
+			fi
+			shift ;;
+
+		--mkinitrd) shift ; _ACTION="$_ACTION mkinitrd" ;;
+		--mkrootfs) shift ; _ACTION="$_ACTION mkrootfs" ;;
+		--mkiso) shift ; _ACTION="$_ACTION mkiso" ;;
+
+		-t|--initfs-type) shift; _MKINITRD_INITFS_TYPE=$1; shift ;;
+		--initfs-type=*) _MKINITRD_INITFS_TYPE=${1#--initfs-type=}; shift ;;
+
+		-I|--import-user) shift; _MKROOTFS_IMPORT_USER=$1; shift ;;
+		--import-user=*) _MKROOTFS_IMPORT_USER=${1#--import-user=}; shift ;;
+
+		-o|--isoname) shift ; _TUX2LIVE_ISO_NAME=$1; shift ;;
+		--isoname=*) _TUX2LIVE_ISO_NAME=${1#--isoname=}; shift ;;
+
+		-b|--batch) shift ; _BATCH_MODE="y" ;;
+		--drbl-mode) shift ; _DRBL_MODE="y" ;;
+		-c|--checkenv) shift ; _ACTION="check_system_env" ;;
+		-d|--debug) shift ; _DEBUG=y ;;
+		-p|--purge) shift ; _PURGE="y" ;;
+		-v|--verbose) shift ; _VERBOSE="-v" ;;
+		-V|--version) shift ; do_print_version=y  ;;
+
+		--help)	shift ; do_print_help=y ;;
+		--)		shift ; break ;;
+		-*)		echo "${0}: ${1}: invalid option" ; do_print_help=y; 	shift ;;
+		*)	do_print_help=y ;shift ;;
+	esac
+done
+
+# --help or --version => Print help/version information
+if [ "$do_print_help" = "y" -o  "$do_print_version" = "y" ]; then
+	[ "$do_print_help" = "y" ] && _USAGE
+	if [ "$do_print_version" = "y" ]; then
+		_version_num=$(echo $_TUX2LIVE_VERSION | awk -F '-' '{print $1}')
+		_code_num=$(echo $_TUX2LIVE_VERSION | awk -F '-' '{print $2}')
+		$SETCOLOR_WARNING;
+		echo "Tux2live version $_version_num - #source :$_code_num"
+		echo "Power by Free Software Lab, NCHC, Taiwan"
+		echo "Web site: http://www.tux2live.org/"
+		$SETCOLOR_NORMAL
+	fi
+	exit 0;
+fi
+
+# check need commands/modules/free space
+check_system_env $_TUX2LIVE_ENV_CHECK_STACKS
+# Check drbl env and export necessary parameters
+[  "$_DRBL_MODE" = "y" ] && drbl_env_check
+
+# check privilege
+[ "$UID" != "0" ] && ( $SETCOLOR_WARNING; echo "Please use root privilege, ex: 'sudo $0'"; $SETCOLOR_NORMAL) &&	exit 1;
+
+echo -n "Tux2live root:"; $SETCOLOR_WARNING; echo -e "	$_TUX2LIVE_ROOT_DIR"; $SETCOLOR_NORMAL
+echo -n "Tux2live output:"; $SETCOLOR_WARNING; echo -e "	$_TUX2LIVE_OUTPUT_DIR"; $SETCOLOR_NORMAL
+echo -n "Tux2live tmp:"; $SETCOLOR_WARNING; echo -e "	$_TUX2LIVE_TMP_DIR"; $SETCOLOR_NORMAL
+echo -n "_ACTION:"; $SETCOLOR_WARNING; echo -e "	$_ACTION"; $SETCOLOR_NORMAL
+
+# [ -z "$_ACTION" -o -n "$(echo $_ACTION |grep 'mkinitrd')" ] && ( $SETCOLOR_WARNING; echo "warning message for mkinitrd stage "; $SETCOLOR_NORMAL)
+[ -z "$_ACTION" -o -n "$(echo $_ACTION |grep 'mkrootfs')" ] && [ "$_MKROOTFS_IMPORT_USER" == "$SUDO_USER" ] &&  ( $SETCOLOR_WARNING; echo "** Pleae close running programs as possible, like Firefox, OpenOffice, ...etc'"; $SETCOLOR_NORMAL; echo -n "Press 'Enter' to continue..."; read _skip)
+# [ -z "$_ACTION" -o -n "$(echo $_ACTION |grep 'mkiso')" ] && ( $SETCOLOR_WARNING; echo "warning message for mkiso stage "; $SETCOLOR_NORMAL)
+
+[ -z "$_ACTION" -o -n "$(echo $_ACTION |grep 'mkinitrd')" ] && . $_TUX2LIVE_ROOT_DIR/tux2live-mkinitrd
+[ -z "$_ACTION" -o -n "$(echo $_ACTION |grep 'mkrootfs')" ] && . $_TUX2LIVE_ROOT_DIR/tux2live-mkrootfs
+[ -z "$_ACTION" -o -n "$(echo $_ACTION |grep 'mkiso')" ] && . $_TUX2LIVE_ROOT_DIR/tux2live-mkiso
+
+[ -z "$_ACTION" -o -n "$(echo $_ACTION |grep 'mkinitrd')" ] && tux2mkinitrd $verbose
+[ -z "$_ACTION" -o -n "$(echo $_ACTION |grep 'mkrootfs')" ] && tux2mkrootfs $verbose
+[ -z "$_ACTION" -o -n "$(echo $_ACTION |grep 'mkiso')" ] && tux2mkiso $verbose
+
+exit 0;

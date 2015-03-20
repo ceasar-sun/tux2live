@@ -1,0 +1,28 @@
+#!/bin/sh
+
+####################################################
+# Tux2live Project
+#
+# Name: 
+#
+# Description:
+#
+# Author: Ceasar Sun <ceasar_at_nchc_org_tw>
+####################################################
+[ -f "/etc/tux2live.conf" ] && . /etc/tux2live.conf
+
+_description="Stop anacron ..."
+
+# Main
+if [ -e /etc/debian_version ]; then
+# Scrips run in debian-base distro
+	echo "$_description"
+
+	# This has the nice side effect of the cron.{daily,weekly,monthly} jobs in
+	# /etc/crontab remaining disabled, yet also not run by anacron
+	if [ -x /etc/init.d/anacron ]; then
+	    for f in /etc/rc?.d/S??anacron; do
+	        mv ${f} ${f%/*}/K00anacron 2>/dev/null
+	    done
+	fi
+fi

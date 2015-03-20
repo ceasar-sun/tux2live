@@ -1,0 +1,41 @@
+#!/bin/sh
+
+####################################################
+# Tux2live Project
+#
+# Name: 
+#
+# Description:
+#
+# Author: Ceasar Sun <ceasar_at_nchc_org_tw>
+####################################################
+[ -f "/etc/tux2live.conf" ] && . /etc/tux2live.conf
+
+_description="Stop services and clean /etc/rc.local at live CD mode ..."
+
+# Main
+if [ ! -e /etc/debian_version -a ! -e /etc/SuSE-release ]; then
+# scripts run in rh-like distro
+	echo "$_description"
+
+	for si in $_SERVICES_TO_STOP; do
+		for sfile in `ls /etc/rc[123456].d/S[0-9][0-9]$si 2>/dev/null`; do
+			_dirname="$(dirname $sfile)"
+			_basename="$(basename $sfile | sed -e 's/^S/K/')"
+			mv $sfile $_dirname/$_basename
+		done
+	done
+fi
+
+# Clean up /etc/lrc.local
+cat > /etc/rc.local <<EOF
+#!/bin/sh -e
+#
+# rc.local
+#
+# This script is generated in tux2live-mkrootfs
+
+touch /var/lock/subsys/local
+
+EOF
+

@@ -1,0 +1,32 @@
+#!/bin/sh
+
+####################################################
+# Tux2live Project
+#
+# Name: 
+#
+# Description:
+#
+# Author: Ceasar Sun <ceasar_at_nchc_org_tw>
+####################################################
+[ -f "/etc/tux2live.conf" ] && . /etc/tux2live.conf
+
+_description="Other misc reconfigurations ..."
+
+# Main
+if [ ! -e /etc/debian_version -a ! -e /etc/SuSE-release ]; then
+# scripts run in rh-like distro
+	echo "$_description"
+
+	# no need for Redhat Network
+	[ -d /etc/sysconfig/rhn ] && rm -rf /etc/sysconfig/rhn 2> /dev/null
+
+	# Avoid clobbering the user's clock
+	rm -f /etc/rc?.d/K??hwclock.sh
+
+	# Disable readahead since it doesn't play well with squashfs + unionfs
+	# use chmod instead of mv to not trigger unionfs bugs.
+	if [ -e /sbin/readahead-list ]; then
+	    chmod -x /sbin/readahead-list
+	fi
+fi

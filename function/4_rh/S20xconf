@@ -1,0 +1,22 @@
+#!/bin/sh
+
+####################################################
+# Name: S20xconf
+#
+# Description:
+#	Clean up X11 xconf, to make sure it would be reconfigure in boot time 
+#
+####################################################
+[ -f "/etc/tux2live.conf" ] && . /etc/tux2live.conf
+
+_description="Clean up X11 xconf ..."
+
+# Main
+if [ ! -e /etc/debian_version -a ! -e /etc/SuSE-release ]; then
+# scripts run in rh-like distro
+	echo "$_description"
+
+	for ix in XF86Config xorg.conf; do
+		[ -e "/etc/X11/$ix" ] && rm -f /etc/X11/${ix}*
+	done
+fi

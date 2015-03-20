@@ -1,0 +1,39 @@
+#!/bin/sh
+
+####################################################
+# Tux2live Project
+#
+# Name: 
+#
+# Description:
+#
+# Author: Ceasar Sun <ceasar_at_nchc_org_tw>
+####################################################
+[ -f "/etc/tux2live.conf" ] && . /etc/tux2live.conf
+
+_description="Reconfig /etc/inittab as autologin shell ..."
+
+# Main
+if [ -e /etc/debian_version ]; then
+# Scrips run in debian-base distro
+	echo "$_description"
+
+	if [ -n "$_LIVECD_USERNAME" ]; then
+		if [ -f /etc/inittab ]; then
+			sed -i -e "s|^\([^:]*:[^:]*:[^:]*\):.*getty.*\<\(tty[0-9]*\).*$|\1:/bin/login -f $_LIVECD_USERNAME </dev/\2 >/dev/\2 2>\&1|" /etc/inittab
+		fi
+		if [ "/etc/event.d/tty*" != "$(echo /etc/event.d/tty*)" ]; then
+			for f in /etc/event.d/tty*; do
+				sed -i -e "s|^exec.*|exec /bin/login -f $_LIVECD_USERNAME </dev/$(basename $f) > /dev/$(basename $f) 2>\&1|" $f
+			done
+		fi
+		
+		# For upstart
+		if [ "/etc/init/tty*" != "$(echo /etc/init/tty*)" ]; then
+			for f in /etc/init/tty*; do
+				tty="$(basename $f | sed -e "s/\(tty[[:digit:]]*\).*/\1/g")"
+				sed -i -e "s|^exec.*|exec /bin/login -f $_LIVECD_USERNAME </dev/$tty > /dev/$tty 2>\&1|" $f
+			done
+		fi
+	fi
+fi

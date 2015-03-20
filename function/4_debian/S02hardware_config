@@ -1,0 +1,42 @@
+#!/bin/sh
+
+####################################################
+# Tux2live Project
+#
+# Name: 
+#
+# Description: Take care the hardware config files, clean old, make them be detected at boot
+#
+# Author: Ceasar Sun <ceasar_at_nchc_org_tw>
+####################################################
+[ -f "/etc/tux2live.conf" ] && . /etc/tux2live.conf
+
+_description="Clean up hardware config files, kudzu logs ..."
+
+# Main
+if [ -e /etc/debian_version ]; then
+# Scrips run in debian-base distro
+	echo "$_description"
+
+	[ -f /etc/sysconfig/hwconf ] && rm -f /etc/sysconfig/hwconf
+
+	# Clean up net card recorder
+	[ -f /etc/iftab ] && rm -rf /etc/iftab
+	find /etc/udev -name *-persistent-net.rules -exec rm -rf {} \;
+	find /etc/udev -name *-net_config.rules -exec rm -rf {} \;
+
+	# Debian
+	# In Debian, we need to keep the modules.conf* so that discover will work.
+
+	for modfiles in /etc/modules /etc/modprobe.conf ; do
+		cat >> $modfiles <<MOD_EOF 
+# /etc/modules: kernel modules to load at boot time.
+#
+# This file should contain the names of kernel modules that are
+# to be loaded at boot time, one per line.  Comments begin with
+# a "#", and everything on the line after them are ignored.
+
+MOD_EOF
+	done
+
+fi

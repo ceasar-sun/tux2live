@@ -1,0 +1,27 @@
+#!/bin/sh
+
+####################################################
+# Tux2live Project
+#
+# Name: 
+#
+# Description: Disable selinux in live CD mode
+#
+# Author: Ceasar Sun <ceasar_at_nchc_org_tw>
+####################################################
+[ -f "/etc/tux2live.conf" ] && . /etc/tux2live.conf
+
+_description="Disable selinux in live CD mode"
+
+# Main
+if [ ! -e /etc/debian_version -a ! -e /etc/SuSE-release ]; then
+# scripts run in rh-like distro
+	echo "$_description"
+
+	# Write your shell script codes here 
+	for ise in /etc/selinux/config /etc/sysconfig/selinux; do
+		if [ -f "$ise" ]; then
+			sed -i -e "s|^SELINUX=.*$|SELINUX=disabled|g" $ise
+		fi
+	done
+fi
