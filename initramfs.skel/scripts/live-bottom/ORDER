@@ -1,0 +1,10 @@
+/scripts/live-bottom/08persistence_excludes
+[ -e /conf/param.conf ] && . /conf/param.conf
+/scripts/live-bottom/12fstab
+[ -e /conf/param.conf ] && . /conf/param.conf
+/scripts/live-bottom/23networking
+[ -e /conf/param.conf ] && . /conf/param.conf
+/scripts/live-bottom/24preseed
+[ -e /conf/param.conf ] && . /conf/param.conf
+/scripts/live-bottom/30accessibility
+[ -e /conf/param.conf ] && . /conf/param.conf

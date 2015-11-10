@@ -1,0 +1,38 @@
+#!/bin/sh
+
+PREREQ=""
+
+prereqs()
+{
+	echo "$PREREQ"
+}
+
+case $1 in
+# get pre-requisites
+prereqs)
+	prereqs
+	exit 0
+	;;
+esac
+
+if [ "x${resume}" = "x" ]; then
+	exit
+fi
+
+case $resume in
+	LABEL=*)
+	resume="/dev/disk/by-label/${resume#LABEL=}"
+	;;
+	UUID=*)
+	resume="/dev/disk/by-uuid/${resume#UUID=}"
+	;;
+esac
+
+if [ ! -e "${resume}" ]; then
+	exit
+fi
+
+if [ -e /sys/power/resume ]; then
+	# hardcode path, uswsusp ships an resume binary too
+	/bin/resume ${resume}
+fi

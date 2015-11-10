@@ -1,0 +1,37 @@
+#!/bin/sh
+
+PREREQ=""
+
+prereqs()
+{
+	echo "$PREREQ"
+}
+
+case $1 in
+# get pre-requisites
+prereqs)
+	prereqs
+	exit 0
+	;;
+esac
+
+case "$DPKG_ARCH" in
+# load the right modules
+powerpc|ppc64)
+	modprobe -Qb i2c-powermac
+	modprobe -Qb therm_pm72
+	modprobe -Qb windfarm_cpufreq_clamp
+	modprobe -Qb windfarm_lm75_sensor
+	modprobe -Qb windfarm_max6690_sensor
+	modprobe -Qb windfarm_pm112
+	modprobe -Qb windfarm_pm81
+	modprobe -Qb windfarm_pm91
+	modprobe -Qb windfarm_smu_controls
+	modprobe -Qb windfarm_smu_sat
+	modprobe -Qb windfarm_smu_sensors
+	;;
+i386|amd64|ia64)
+	modprobe -v fan
+	modprobe -v thermal
+	;;
+esac
