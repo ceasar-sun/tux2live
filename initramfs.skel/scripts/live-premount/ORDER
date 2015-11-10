@@ -1,6 +1,0 @@
-/scripts/live-premount/select_eth_device
-[ -e /conf/param.conf ] && . /conf/param.conf
-/scripts/live-premount/readonly
-[ -e /conf/param.conf ] && . /conf/param.conf
-/scripts/live-premount/modules
-[ -e /conf/param.conf ] && . /conf/param.conf
